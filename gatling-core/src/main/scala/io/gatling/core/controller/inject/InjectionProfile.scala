@@ -33,6 +33,8 @@ trait InjectionProfile {
 
   def totalUserCount: Option[Long]
 
+  def isEmpty: Boolean
+
   def workload(
       scenario: Scenario,
       userIdGen: AtomicLong,

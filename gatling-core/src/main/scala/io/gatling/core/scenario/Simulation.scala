@@ -155,6 +155,30 @@ abstract class Simulation {
   private[gatling] def executeAfter(): Unit = _afterSteps.foreach(_.apply())
 }
 
+object SimulationParams {
+  private[scenario] def removeScenariosWithEmptyInjectionProfiles(
+      rootScenarios: List[Scenario],
+      childrenScenarios: Map[String, List[Scenario]]
+  ): (List[Scenario], Map[String, List[Scenario]]) = {
+    val allScenarios: Map[Option[String], List[Scenario]] = childrenScenarios.map { case (key, value) => Option(key) -> value }.updated(None, rootScenarios)
+    val emptyScenarios: Iterable[Scenario] = allScenarios.values.flatten.filter(_.injectionProfile.isEmpty)
+
+    val nonEmptyScenarios: Map[Option[String], List[Scenario]] =
+      emptyScenarios.foldLeft(allScenarios) { (fixedScenarios, emptyScenario) =>
+        val emptyScenarioChildren = fixedScenarios(Some(emptyScenario.name))
+        // locate parent
+        val (parent, parentChildren) = fixedScenarios.find { case (_, children) => children.contains(emptyScenario) }.get
+        // replace itself with children
+        fixedScenarios - Some(emptyScenario.name) + (parent -> (parentChildren.filterNot(_ == emptyScenario) ++ emptyScenarioChildren))
+      }
+
+    val nonEmptyRootScenarios = nonEmptyScenarios(None)
+    val nonEmptyChildren = nonEmptyScenarios.collect { case (Some(parentScenario), children) => parentScenario -> children }
+
+    (nonEmptyRootScenarios, nonEmptyChildren)
+  }
+}
+
 final class SimulationParams(
     val name: String,
     val rootPopulationBuilders: List[PopulationBuilder],
@@ -174,6 +198,7 @@ final class SimulationParams(
     val rootScenarios = rootPopulationBuilders.map(buildScenario(_, coreComponents, protocolComponentsRegistries))
     val childrenScenarios = childrenPopulationBuilders.view.mapValues(_.map(buildScenario(_, coreComponents, protocolComponentsRegistries))).toMap
 
-    new Scenarios(rootScenarios, childrenScenarios)
+    val (nonEmptyRootScenarios, nonEmptyChildren) = SimulationParams.removeScenariosWithEmptyInjectionProfiles(rootScenarios, childrenScenarios)
+    new Scenarios(nonEmptyRootScenarios, nonEmptyChildren)
   }
 }

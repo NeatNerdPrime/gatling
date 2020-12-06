@@ -35,6 +35,8 @@ final class OpenInjectionProfile(val steps: Iterable[OpenInjectionStep]) extends
 
   override def totalUserCount: Option[Long] = Some(steps.sumBy(_.users))
 
+  override def isEmpty: Boolean = totalUserCount == Some(0)
+
   override def workload(
       scenario: Scenario,
       userIdGen: AtomicLong,
