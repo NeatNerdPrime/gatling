@@ -43,10 +43,6 @@ class SimulationParamsSpec extends BaseSpec {
           statsEngine: StatsEngine,
           clock: Clock
       ): Workload = null
-
-      //[fl]
-      //
-      //[fl]
     }
 
   private def newScenario(name: String, empty: Boolean): Scenario =

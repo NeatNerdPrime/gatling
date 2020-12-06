@@ -43,8 +43,4 @@ trait InjectionProfile {
       statsEngine: StatsEngine,
       clock: Clock
   ): Workload
-
-  //[fl]
-  //
-  //[fl]
 }
