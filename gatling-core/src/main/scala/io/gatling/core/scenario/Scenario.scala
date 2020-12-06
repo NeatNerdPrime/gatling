@@ -29,7 +29,9 @@ final class Scenario(
     val injectionProfile: InjectionProfile,
     val ctx: ScenarioContext,
     val children: Iterable[Scenario]
-)
+) {
+  override def toString: String = name
+}
 
 private[gatling] final class Scenarios(
     val roots: List[Scenario],
